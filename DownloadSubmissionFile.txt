@@ -1,0 +1,116 @@
+ 
+DROP DATABASE Course4;
+
+create database Course4;
+
+use Course4;
+
+ CREATE TABLE customer_account (
+	customer_accountID int AUTO_INCREMENT PRIMARY KEY ,
+	account_number varchar(255),
+	first_name varchar(255),
+	last_name varchar(255) ,
+	address varchar(255) 
+);
+
+
+CREATE TABLE policy_holder (
+
+	policy_holderID int AUTO_INCREMENT PRIMARY KEY ,
+	
+	first_name varchar(255) ,
+	
+	last_name varchar(255) ,
+	
+	address varchar(255) ,
+	
+	birth_date date ,
+
+	license_number varchar(255) ,
+	
+	license_number_issue Date, 
+
+	customer_accountID int,
+
+	FOREIGN KEY (customer_accountID) REFERENCES customer_account(customer_accountID)
+);
+
+
+
+use Course4;
+
+CREATE TABLE policy (
+
+	policyID int AUTO_INCREMENT PRIMARY KEY,
+
+	policy_number varchar(255),
+
+	effective_date date ,
+
+	expiration_date date ,
+    
+    premium decimal(60,2),
+
+    policy_holderID int,
+
+	isClaimed boolean DEFAULT 0,
+
+	isExpired  boolean DEFAULT 0,
+
+	FOREIGN KEY (policy_holderID) REFERENCES policy_holder(policy_holderID)
+);
+
+
+
+CREATE TABLE vehicle (
+
+	vehicleID  int AUTO_INCREMENT PRIMARY KEY ,
+	
+	make varchar(255) ,
+	
+	model varchar(255) ,
+	
+	year int,
+	
+	type varchar(255) ,
+	
+	fuel_type varchar(255) ,
+
+	purchase_price decimal(60,2),
+
+    color varchar(255) ,
+
+    plate_number varchar(255) ,
+
+    premium_charged decimal(60,2),
+    
+	policyID int,
+
+	FOREIGN KEY (policyID) REFERENCES Policy(policyID)
+);
+
+
+
+CREATE TABLE claims (
+
+	claimsID  int AUTO_INCREMENT PRIMARY KEY ,
+	
+	claim_number varchar(255) ,
+
+    date_of_accdident date ,
+
+    accident_location varchar(255) ,
+
+    description_of_accident varchar(255) ,
+
+    description_of_damage varchar(255) ,
+
+    estimate_cost decimal (60,2),
+	
+	policyID int,
+
+	FOREIGN KEY (policyID) REFERENCES Policy(policyID)
+);
+
+
+
