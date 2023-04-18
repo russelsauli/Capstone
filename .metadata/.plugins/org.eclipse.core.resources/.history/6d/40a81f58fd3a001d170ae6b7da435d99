@@ -1,0 +1,165 @@
+
+package models;
+/**
+* Java Course 4 Capstone
+*
+* @author John Russel Sauli
+* @Description:  A simple Automobile Insurance Policy and 
+* 				Claims Administration system (PAS) will be created
+* 			    to manage customer automobile insurance policies 
+* 				and as well as accident claims for an insurance company. 
+* Created Date: 6/26/2022
+* Modified Date:9/23/2022
+* @Modified By: John Russel Sauli
+*
+*/
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+
+import databaseConnection.DBConnection;
+
+public class CustomerAccount implements DatabaseFunctions {
+	
+	DBConnection connection = new DBConnection();
+	
+	// attributes of customer account
+	private int customerAccountID;
+	private String accountNumber;
+	private String firstName="";
+	private String lastName="";
+	private String address="";
+
+	// constructor to be able to call the other methods within the class
+	public CustomerAccount() {}
+	
+
+	public CustomerAccount(int customerAccountID, String accountNumber, String firstName,String lastName, String address) {
+		this.customerAccountID = customerAccountID;
+		this.accountNumber = accountNumber;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.address = address;
+	}
+	
+	// save data of customer account
+	@Override
+	public void save(Object customerAccount) {
+		
+		Connection dbConnection =connection.setConnection();	// set connection
+		
+		try {
+			
+			String saveData="INSERT INTO customer_account (account_number, first_name, last_name,address)VALUES (?,?,?,?)";	// insert query
+			
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(saveData, Statement.RETURN_GENERATED_KEYS);
+			
+			preparedStatement.setString(1, accountNumber.toUpperCase());
+			preparedStatement.setString(2, firstName.toUpperCase());
+			preparedStatement.setString(3, lastName.toUpperCase());
+			preparedStatement.setString(4, address.toUpperCase());
+			
+			preparedStatement.executeUpdate();
+			
+			ResultSet resultSet = preparedStatement.getGeneratedKeys(); // return the generated id base on the result set 
+			
+			if (resultSet.next()){
+				
+				this.setCustomerAccountID(resultSet.getInt(1));		// setting the generated id to the customer account ID
+				this.setAccountNumber(accountNumber);
+			}
+			
+		} catch (SQLException e) {
+			
+			System.out.println(e);
+		}	
+	}
+	
+	// load data from database
+	public ArrayList<Object> loadData() {
+		
+		ArrayList<Object> listOfData= new ArrayList<Object>();	// object where we put data
+		
+		CustomerAccount tempCustomerAccount = new CustomerAccount();
+		
+		Connection dbConnection = connection.setConnection();
+		
+		 try {
+	            String loadData = "SELECT * FROM customer_account"; // query in prepared statement the 
+	            
+	            PreparedStatement preparedStatement = dbConnection.prepareStatement(loadData);	 // run the statement of sql in prepared statement 
+	           
+	            ResultSet resultSet = preparedStatement.executeQuery();	// the result set of the execute prepared statement
+	           
+	            while(resultSet.next()) {
+	            	
+	            	tempCustomerAccount= new CustomerAccount ();
+	            	
+	            	tempCustomerAccount.customerAccountID=resultSet.getInt("customer_accountID");	// setting the values of the customer account attribute base on result set 
+	            	tempCustomerAccount.accountNumber=resultSet.getString("account_number");
+	            	tempCustomerAccount.firstName= resultSet.getString("first_name");
+	            	tempCustomerAccount.lastName=resultSet.getString("last_name");
+	            	tempCustomerAccount.address=resultSet.getString("address");
+					
+	            	listOfData.add(tempCustomerAccount);
+	            }
+	            
+	            dbConnection.close();
+	            
+	       } catch (SQLException e) {
+	        	
+	            System.out.println(e);
+	            
+	       }
+		
+		
+		return listOfData;	 // return value 
+		
+	}
+	
+	// getters and setters
+	public String getAccountNumber() {
+		return accountNumber;
+	}
+
+	public void setAccountNumber(String accountNumber) {
+		this.accountNumber = accountNumber;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public int getCustomerAccountID() {
+		return customerAccountID;
+	}
+
+	public void setCustomerAccountID(int customerAccountID) {
+		this.customerAccountID = customerAccountID;
+	}
+}

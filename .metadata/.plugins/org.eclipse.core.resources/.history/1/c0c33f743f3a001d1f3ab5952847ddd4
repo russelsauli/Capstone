@@ -1,0 +1,252 @@
+package models;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import databaseConnection.DBConnection;
+import main.Print;
+
+public class Vehicle  extends Policy{
+
+	DBConnection connection = new DBConnection();
+	
+	String plateNumber;
+	String make;
+	String model;
+	int year;
+	String type;
+	String fuelType;
+	String color;
+	double purchasePrice;
+	double premiumCharged;
+	int policyID;
+	int vehicleID;
+
+	
+
+	public Vehicle() {}
+
+	// constructor that set value of the class vehicle
+	public Vehicle(int vehicleID, int policyID, String make, String model, String type, String fuelType, String color,
+			String plateNumber, double purchasePrice, double premiumCharged, int year) {
+
+		this.vehicleID = vehicleID;
+		this.make = make;
+		this.model = model;
+		this.type = type;
+		this.fuelType = fuelType;
+		this.policyID = policyID;
+		this.color = color;
+		this.plateNumber = plateNumber;
+		this.purchasePrice = purchasePrice;
+		this.premiumCharged = premiumCharged;
+		this.year = year;
+	}
+	
+	@Override
+	public void save(Object vehicle) {
+
+		try {
+
+			Connection dbConnection =connection.setConnection();
+
+			String saveData = "INSERT INTO vehicle (plate_number ,make ,model,color ,year ,type ,fuel_type ,purchase_price,premium_charged ,policyID )VALUES (?,?,?,?,?,?,?,?,?,?)";
+
+			PreparedStatement preparedStatement =dbConnection.prepareStatement(saveData);
+			
+			preparedStatement.setString(1, plateNumber.toUpperCase());
+			preparedStatement.setString(2, make.toUpperCase());
+			preparedStatement.setString(3, model.toUpperCase());
+			preparedStatement.setString(4, color.toUpperCase());
+			preparedStatement.setInt(5, year);
+			preparedStatement.setString(6, type.toUpperCase());
+			preparedStatement.setString(7, fuelType.toUpperCase());
+			preparedStatement.setDouble(8, purchasePrice);
+			preparedStatement.setDouble(9, premiumCharged);
+			preparedStatement.setInt(10, policyID);
+
+			preparedStatement.executeUpdate();
+
+			dbConnection.close();
+
+		} catch (SQLException e) {
+			System.out.println(e);
+		}
+		
+		
+	}
+	
+	public ArrayList<Object> loadData() {
+		
+		Vehicle tempvehicle = new Vehicle();	// new object policyholder
+		
+		ArrayList<Object> listOfData = new ArrayList<Object>();	//arraylist of policyholder
+
+		Connection dbConnection =connection.setConnection();	
+		
+		try {
+			
+			String loadData = "SELECT * FROM vehicle LEFT JOIN policy ON vehicle.policyID = policy.policyID LEFT JOIN policy_holder ON policy.policy_holderID = policy_holder.policy_holderID  LEFT JOIN customer_account ON policy_holder.customer_accountID = customer_account.customer_accountID";
+
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(loadData);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {	// loop the result set and set the value to the constructor 
+
+				// set of value for new policyholder 
+				
+				tempvehicle= new Vehicle();
+				
+				
+				tempvehicle.setPolicyHolderID(resultSet.getInt("policy_holderID"));
+				tempvehicle.setFirstNamePH(resultSet.getString("policy_holder.first_name"));
+				tempvehicle.setLastNamePH(resultSet.getString("policy_holder.last_name"));
+				tempvehicle.setAddressPH(resultSet.getString("policy_holder.address"));
+				tempvehicle.setBirthDate(resultSet.getString("birth_date"));
+				tempvehicle.setDriversLicence(resultSet.getString("license_number"));
+				tempvehicle.setDriversLicenseIssued(resultSet.getString("license_numberIssue"));
+				tempvehicle.setCustomerAccountID(resultSet.getInt("policy_holder.customer_accountID"));
+				
+				tempvehicle.setAccountNumber(resultSet.getString("account_number"));
+				tempvehicle.setFirstName(resultSet.getString("first_name"));
+				tempvehicle.setLastName(resultSet.getString("last_name"));
+				tempvehicle.setAddress(resultSet.getString("address"));
+				
+				
+				tempvehicle.setPolicyID(resultSet.getInt("policyID"));
+				tempvehicle.setPolicyNumber(resultSet.getString("policy_number"));
+				tempvehicle.setEffectiveDate(resultSet.getString("effective_date"));
+				tempvehicle.setExpirationDate(resultSet.getString("expiration_date"));
+				tempvehicle.setPremiumCharge(resultSet.getDouble("premium"));
+				tempvehicle.setPolicyHolderID(resultSet.getInt("policy_holderID"));
+				tempvehicle.setIsClaimed(resultSet.getInt("isClaimed"));
+				tempvehicle.setIsExpired(resultSet.getInt("isExpired"));
+				
+				
+				tempvehicle.setVehicleID(resultSet.getInt("vehicleID"));
+				tempvehicle.setMake(resultSet.getString("make"));
+				tempvehicle.setModel(resultSet.getString("model"));
+				tempvehicle.setYear(resultSet.getInt("year"));
+				tempvehicle.setType(resultSet.getString("type"));
+				tempvehicle.setFuelType(resultSet.getString("fuel_type"));
+				tempvehicle.setPurchasePrice(resultSet.getDouble("purchase_price"));
+				tempvehicle.setColor(resultSet.getString("color"));
+				tempvehicle.setPlateNumber(resultSet.getString("plate_number"));
+				tempvehicle.setPremiumCharged(resultSet.getDouble("premium_charged"));
+				
+				tempvehicle.setVehicleID(resultSet.getInt("vehicle.policyID"));
+				
+				
+				
+            	
+            	listOfData.add(tempvehicle);		// add a new data to the list
+			}
+
+			dbConnection.close();	// connection close
+
+		} catch (SQLException e) {
+			
+			System.out.println(e);
+		}
+
+		return listOfData;
+		
+	}
+	
+
+	// getters and setters
+	public String getMake() {
+		return make;
+	}
+
+	public void setMake(String make) {
+		this.make = make;
+	}
+
+	public String getModel() {
+		return model;
+	}
+
+	public void setModel(String model) {
+		this.model = model;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getFuelType() {
+		return fuelType;
+	}
+
+	public void setFuelType(String fuelType) {
+		this.fuelType = fuelType;
+	}
+
+	public String getColor() {
+		return color;
+	}
+
+	public void setColor(String color) {
+		this.color = color;
+	}
+
+	public String getPlateNumber() {
+		return plateNumber;
+	}
+
+	public void setPlateNumber(String plateNumber) {
+		this.plateNumber = plateNumber;
+	}
+
+	public double getPurchasePrice() {
+		return purchasePrice;
+	}
+
+	public void setPurchasePrice(double purchasePrice) {
+		this.purchasePrice = purchasePrice;
+	}
+
+	public double getPremiumCharged() {
+		return premiumCharged;
+	}
+
+	public void setPremiumCharged(double premiumCharged) {
+		this.premiumCharged = premiumCharged;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getPolicyID() {
+		return policyID;
+	}
+
+	public void setPolicyID(int policyID) {
+		this.policyID = policyID;
+	}
+
+	public int getVehicleID() {
+		return vehicleID;
+	}
+
+	public void setVehicleID(int vehicleID) {
+		this.vehicleID = vehicleID;
+	}
+
+
+
+}

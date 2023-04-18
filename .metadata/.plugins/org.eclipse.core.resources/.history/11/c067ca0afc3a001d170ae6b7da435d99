@@ -1,0 +1,456 @@
+package main;
+
+/**
+* Java Course 4 Capstone
+*
+* @author John Russel Sauli
+* @Description:  A simple Automobile Insurance Policy and 
+* 				Claims Administration system (PAS) will be created
+* 			    to manage customer automobile insurance policies 
+* 				and as well as accident claims for an insurance company. 
+* Created Date: 6/26/2022
+* Modified Date:9/23/2022
+* @Modified By: John Russel Sauli
+*
+*/
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Random;
+import models.Claims;
+import models.CustomerAccount;
+import models.Policy;
+import models.PolicyHolder;
+import models.RatingEngine;
+import models.Vehicle;
+
+public class CapstoneSubProcess {
+
+	InputValidator inputValidator = new InputValidator();	// ihnstiantiate inputvalidator which contain the input validations
+
+	Print print = new Print();	// instiantiate print where conatains all the printing 
+
+	PolicyHolder policyHolder = new PolicyHolder();		//instiantiate policy holder
+
+	int selectedPolicyID = 0;
+
+	String plateNumber,policyNumber,claimNumber;
+
+	// a method that generate number 
+	public String generateNumber(int sizeFormat, int maxRandomNumber, String format) {
+
+		Random random = new Random();	// instiantiate random
+
+		String generateNumber = "";
+
+		int randomAccountNumber = 0; // the result of random number
+
+		randomAccountNumber = random.nextInt(maxRandomNumber); // random a number resulting
+
+		generateNumber = Integer.toString(randomAccountNumber);	
+
+		while (generateNumber.length() < sizeFormat) {	// while the length of teh generate number not match add 0 infront of it
+
+			generateNumber = "0" + generateNumber;
+		}
+		
+		generateNumber=format+generateNumber;	// add the format of number
+		
+		return generateNumber;
+	}
+	
+	// a method that return the value of input policy
+	public Policy policyData() {
+		
+		Policy policyinfo = new Policy();
+		
+		ArrayList<Object> policyList = new ArrayList<Object>();
+		
+		String effectiveDate,expirationDate = null;
+		
+		policyNumber=null;
+		
+		print.headerLabel("POLICY INFORMATION");
+		// loop until the effective date if valid and more that or equal to today date
+		do {
+			
+			effectiveDate=inputValidator.returnDateFormat("ENTER POLICY EFFECTIVE DATE");
+			
+			if(LocalDate.parse(effectiveDate).isBefore(LocalDate.now()) && ! effectiveDate.equals(null)) {
+				
+				print.headerLabel("POLICY EFFECTIVE DATE SHOULD NOT BE LESS THAN TODAY DATE");
+			}
+			
+		}while(LocalDate.parse(effectiveDate).isBefore(LocalDate.now()));
+		
+		expirationDate=LocalDate.parse(effectiveDate).plusMonths(6).toString();	// set expiration date by adding 6 month from effective date
+		
+		do {
+			policyList=policyinfo.loadData();	// load the policy data from datbase and set to policy list
+			
+			policyNumber=generateNumber(6,999999,"");	// generate policy number 
+			
+		}while(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equals(policyNumber)).toList().size()>=1);	// loop until theres no policy number not match
+		
+		policyinfo= new Policy(0,0,policyNumber,effectiveDate,expirationDate,0,0,0) ;	
+		
+		return   policyinfo;
+	}
+
+	// a method that return the value fo policyholder
+	public PolicyHolder addPolicyHolder(String accountNumber, PolicyHolder tempPolicyHolder) {
+
+		
+		CustomerAccount customerAccount = new CustomerAccount();
+
+		ArrayList<Object> policyHolderList = new ArrayList<Object>();
+		ArrayList<Object> customerAccountList = new ArrayList<Object>();
+
+		String selectionChoice = null;
+
+		print.headerLabel("ADD A POLICY HOLDER");
+
+		do {
+
+			policyHolder = new PolicyHolder();
+
+			policyHolderList = tempPolicyHolder.loadData();
+
+			policyHolder.setFirstNamePH(inputValidator.returnString("Enter first name :").toUpperCase());
+
+			policyHolder.setLastNamePH(inputValidator.returnString("Enter last name :").toUpperCase());
+
+			
+			// check if policyholder is existing base on firtname and last name and account number
+			if (policyHolderList.stream().filter(a -> ((PolicyHolder) a).getFirstNamePH().equalsIgnoreCase(policyHolder.getFirstNamePH())&& ((PolicyHolder) a).getLastNamePH().equalsIgnoreCase(policyHolder.getLastNamePH())&& ((PolicyHolder) a).getAccountNumber().equals(accountNumber)).toList().size() >= 1) { // check if the customer is existing base on first name and last name
+
+				print.headerLabel("POLICY HOLDER DETAIL ALREADY EXIST FOR THIS ACCOUNT\nExisting data will be load");
+
+				// iterate and load the data of policyholder list to policyholder
+				for (Object policyholderItem : policyHolderList.stream().filter(a -> ((PolicyHolder) a).getFirstNamePH().equalsIgnoreCase(policyHolder.getFirstNamePH())&& ((PolicyHolder) a).getLastNamePH().equalsIgnoreCase(policyHolder.getLastNamePH())&& ((PolicyHolder) a).getAccountNumber().equalsIgnoreCase(accountNumber)).toList()) {
+
+					policyHolder = (PolicyHolder) policyholderItem;
+				}
+			}
+
+			else {
+
+				customerAccountList = customerAccount.loadData();	// load and set value of customer accountlist
+				
+				for (Object customerAccountItem : customerAccountList.stream().filter(a -> ((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList()) {
+
+					policyHolder.setAddressPH(((CustomerAccount) customerAccountItem).getAddress());	// set address of policyhoilder
+					policyHolder.setCustomerAccountID(((CustomerAccount) customerAccountItem).getCustomerAccountID());	// set customeraccountID of poklicyholder
+				}
+				
+				customerAccountList = customerAccount.loadData();	// load and set value of customerAccount
+				// if policyholder info is same with customer account 
+				if (customerAccountList.stream().filter(a -> ((CustomerAccount) a).getFirstName().equals(policyHolder.getFirstNamePH().toUpperCase())&& ((CustomerAccount) a).getLastName().equals(policyHolder.getLastNamePH().toUpperCase())&& ((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList().size() >= 1) {
+					
+					policyHolder = policyHolderData(policyHolder);	// set additional data for policy holder
+				} 
+				else {
+					policyHolder.setAddressPH(inputValidator.returnString("Enter address :").toUpperCase()); // set adddress for policyholder
+					policyHolder = policyHolderData(policyHolder);	// set additional data for policy holder
+				}
+				
+				policyHolder.setPolicyHolderID(0);	// set policyHolderId to 0 means not existing data
+			}
+
+			if (!policyHolder.getFirstNamePH().equals("")) { // if there a values for policy holder
+
+				print.printPolicyHolder(policyHolder, ""); // print policy holder detail
+
+				print.headerLabel("DO YOU WANT TO USED THIS INFORMATION FOR CREATING NEW POLICY Y/N  ");
+				selectionChoice = inputValidator.returnChoice("SELECT: ");
+			}
+
+		} while (selectionChoice.equalsIgnoreCase("N"));	// loop until the policyholderdata complete or approved by the user
+
+		selectionChoice = "";
+
+		return policyHolder; // return the value of policy holder
+
+	}
+
+	// a methoid where we put the value get teh information of policy holder
+	public PolicyHolder policyHolderData(PolicyHolder tempPolicyHolder) {
+
+		ArrayList<Object> policyHolderList = new ArrayList<Object>();
+
+		LocalDate tempDate;
+
+		policyHolderList = tempPolicyHolder.loadData();
+
+		do {
+
+			tempPolicyHolder.setBirthDate(inputValidator.returnDateFormat("Enter Birthday "));	// set value for birthday
+
+			tempDate = LocalDate.parse(tempPolicyHolder.getBirthDate()); 	// make birthday data to date format
+
+			if (LocalDate.now().minusYears(100).isAfter(tempDate)) {	// check if birthday is less than 100 year 
+
+				System.out.println("DATE OUT OF RANGE");
+			}
+
+			if (tempDate.isAfter(LocalDate.now().minusYears(18))) {	// check if birthday is 18 years ago
+
+				System.out.println("TOO YOUNG TO HAVE A VEHICLE INSURANCE MUST BE 18+ BASE ON TODAY DATE");
+			}
+
+		} while (LocalDate.now().minusYears(100).isAfter(tempDate) || tempDate.isAfter(LocalDate.now().minusYears(18)));	// loop until birthday is not less tahn 100 year and not less than 18 years
+
+		do {
+			tempPolicyHolder.setDriversLicence(inputValidator.returnString("Enter License number: "));	// set licence number
+
+			// if drivers license is existing
+			if (policyHolderList.stream().filter(
+					a -> ((PolicyHolder) a).getDriversLicence().equalsIgnoreCase(tempPolicyHolder.getDriversLicence()))
+					.toList().size() >= 1) {
+
+				System.out.println("LICENSE NUMBER ALREADY EXIST");
+			}
+
+		} while (policyHolderList.stream().filter(
+				a -> ((PolicyHolder) a).getDriversLicence().equalsIgnoreCase(tempPolicyHolder.getDriversLicence()))
+				.toList().size() >= 1);	// loop until license number not existing in database
+
+		do {
+
+			tempPolicyHolder.setDriversLicenseIssued(inputValidator.returnDateFormat("Enter License issued date "));	// set license issue date
+
+			tempDate = LocalDate.parse(tempPolicyHolder.getDriversLicenseIssued()); // make license issue date format to localdate
+
+			if (LocalDate.now().minusYears(100).isAfter(tempDate)) {	// check if license issued date is lessthan 100 the today dte
+
+				System.out.println("DATE OUT OF RANGE");
+			}
+
+			if (tempDate.isBefore(LocalDate.parse(tempPolicyHolder.getBirthDate()).plusYears(18))) {	// check if birtdat 18 years ago
+
+				System.out.println("TOO YOUNG TO HAVE A DRIVERS LICENSE MUST BE 18+ BASE ON TODAY DATE");
+			}
+			if (tempDate.isAfter(LocalDate.now())) {	// check if issue date is after today date
+				System.out.println("ISSUED DATE SHOULD NOT BE GREATER THAN TODAY DATE");
+
+			}
+
+		} while (LocalDate.now().minusYears(100).isAfter(tempDate)
+				|| tempDate.isBefore(LocalDate.parse(tempPolicyHolder.getBirthDate()).plusYears(18))
+				|| tempDate.isAfter(LocalDate.now()));
+
+		return tempPolicyHolder;
+		
+	}
+	
+	// a method wehre we store the added vichle and retun its value
+	public ArrayList<Vehicle> addVehicle(ArrayList<Vehicle> vehicleList,PolicyHolder tempPolicyHolder) {
+
+		Vehicle vehicle = new Vehicle();
+
+		RatingEngine ratingEngine = new RatingEngine();
+
+		ArrayList<Object> dbData = new ArrayList<Object>();
+
+		String selectionChoice = null;
+
+		do { // loop until the customer don't want to add vehicle or selecting N on choices
+
+			dbData = vehicle.loadData();
+
+			print.headerLabel("ADD VEHICLE IN THE POLICY");
+
+			plateNumber = inputValidator.returnString("ENTER PLATE NUMBER: ");
+
+			if (dbData.stream().filter(a -> ((Vehicle) a).getPlateNumber().equalsIgnoreCase(plateNumber.toUpperCase())
+					&& ((Vehicle) a).getIsExpired() == 0).toList().size() >= 1) {
+
+				print.headerLabel("VEHICLE ALREADY HAD A ACTIVE POLICY");
+				
+			} else if (isVehicleExist(vehicleList, plateNumber) == true) {
+
+				System.out.println("VEHICLE ALREADY ADDED");
+			} else {
+
+				vehicle=vehicleData();
+				
+				vehicle.setPlateNumber(plateNumber);
+				
+				vehicle.setDriversLicenseIssued(tempPolicyHolder.getDriversLicenseIssued());
+				
+				vehicle.setPremiumCharged(ratingEngine.ratingEngine(vehicle));
+				
+				vehicleList.add(vehicle);
+			}
+
+			if (vehicleList.size() <= 0) {
+
+				print.headerLabel("PLEASE ATLEAST 1 VEHICLE");
+				selectionChoice="N";
+
+			} else {
+
+				inputValidator.input.nextLine();
+				
+				print.headerLabel("DO YOU WANT TO ADD A CAR: Y/N");
+				
+				selectionChoice = inputValidator.returnChoice("SELECT: ");
+			}
+
+		} while (selectionChoice.equalsIgnoreCase("Y") || vehicleList.size() <= 0); // looping if 0 car exist and
+																					// choices is selected choice is Y
+
+		return vehicleList;
+	}
+
+	public Vehicle vehicleData() {
+
+		Vehicle tempVehicle = new Vehicle();
+
+		int selectionChoiceCar;
+
+		tempVehicle.setMake(inputValidator.returnString("Enter maker of the car: "));
+		tempVehicle.setModel(inputValidator.returnString("Enter Model of the car: "));
+		tempVehicle.setColor(inputValidator.returnString("Enter color of the car: "));
+
+		do {
+			tempVehicle.setYear(inputValidator.returnInterger("Enter year of the car: "));
+
+			if ((LocalDate.now().getYear() - tempVehicle.getYear()) > 40) {
+				System.out.println("VEHICLE MUST NOT BE MORE THAN 40");
+			}
+
+			else if ((LocalDate.now().getYear() - tempVehicle.getYear()) < 0) {
+				System.out.println("CANT ACCEPT FUTURE YEAR");
+			}
+
+		} while (tempVehicle.getYear() > LocalDate.now().getYear() || tempVehicle.getYear() <= 0
+				|| (LocalDate.now().getYear() - tempVehicle.getYear()) > 40);
+
+		do {
+			selectionChoiceCar = inputValidator.returnInterger(
+					"Select the type of car\n1: 4-door sedan\n2: 2-door sports car\n3: SUV\n4: Truck\nSelect: ");
+
+			if (selectionChoiceCar == 1) {
+
+				tempVehicle.setType("4-door sedan");
+
+			} else if (selectionChoiceCar == 2) {
+
+				tempVehicle.setType("2-door sports car");
+
+			} else if (selectionChoiceCar == 3) {
+
+				tempVehicle.setType("SUV");
+
+			} else if (selectionChoiceCar == 4) {
+
+				tempVehicle.setType("Truck");
+			}
+
+		} while (selectionChoiceCar >= 5 || selectionChoiceCar <= 0);
+
+		do {
+			selectionChoiceCar = inputValidator
+					.returnInterger("Select the FUEL type of car\n1: Diesel\n2: Electric\n3: Petrol\nSelect: ");
+
+			if (selectionChoiceCar == 1) {
+
+				tempVehicle.setFuelType("Diesel");
+			}
+
+			else if (selectionChoiceCar == 2) {
+
+				tempVehicle.setFuelType("Electric");
+			}
+
+			else if (selectionChoiceCar == 3) {
+
+				tempVehicle.setFuelType("Petrol");
+			}
+
+		} while (selectionChoiceCar >= 4 || selectionChoiceCar <= 0);
+
+		tempVehicle.setPurchasePrice(inputValidator.returnDouble("Enter Purchase Price of the car: "));
+		// constructor that set new value for vehicle
+
+		return tempVehicle;
+	}
+
+	public boolean isVehicleExist(ArrayList<Vehicle> vehicleList, String PlateNumber) {
+
+		boolean isVehicleExist = false;
+
+		for (Vehicle tempVehicle : vehicleList) {
+
+			if (tempVehicle.getPlateNumber().equalsIgnoreCase(PlateNumber)) {
+
+				isVehicleExist = true;
+			}
+		}
+
+		return isVehicleExist;
+	}
+	
+	public Claims claimDetail(Policy policy) {
+		
+		Claims claims= new Claims();
+		
+		ArrayList<Object> claimlist = new ArrayList<Object>();
+		
+		String accidentDate = "",accidentLocation = "", accidentDescription = "",descriptionOfDamage = "",selectionChoice=null;
+		
+		double estimateCost = 0;
+		
+		do {
+			
+			accidentDate = inputValidator.returnDateFormat("DATE OF ACCIDENT :");
+			
+			if(LocalDate.parse(accidentDate).isBefore(LocalDate.parse(policy.getEffectiveDate()))) {	// if set claim date is before the effective date 
+				
+				print.headerLabel("THE POLICY IS NOT YET EFFECTIVE ON THIS DATE");
+				selectionChoice=inputValidator.returnChoice("DO YOU WANT TO CONTINUE Y/N: ");
+				
+			}
+			
+			else if(LocalDate.parse(accidentDate).isAfter(LocalDate.parse(policy.getExpirationDate()))) {	// if set claim date is after the expiration date 
+				
+				print.headerLabel("POLICY WAS ALREADY EXPIRED BEFORE THE ACCIDENT HAPPENED");
+				selectionChoice=inputValidator.returnChoice("DO YOU WANT TO CONTINUE Y/N: ");
+				
+			}	
+			else if(LocalDate.parse(accidentDate).isAfter(LocalDate.now())) {								// if set claim date is ahead of today date
+				
+				print.headerLabel("CAN ACCEPT FUTURE DATE");
+				selectionChoice=inputValidator.returnChoice("DO YOU WANT TO CONTINUE Y/N: ");
+			}
+		
+			else{
+				
+				accidentLocation = inputValidator.returnString("ACCIDENT LOCATION :");
+				
+				accidentDescription = inputValidator.returnString("ACCIDENT DESCRIPTION :");
+			
+				descriptionOfDamage = inputValidator.returnString("DESCRIPTION OF DAMAGE IN THE VEHICLE :");
+			
+				estimateCost = inputValidator.returnDouble("ESTIMATE COST OF REPAIR :");
+				
+				do{
+					
+					claimNumber=generateNumber(5,99999,"C");
+					
+					claimlist=claims.loadData();
+					
+				}while(claimlist.stream().filter(a->((Claims) a).getClaimNumber().equalsIgnoreCase(claimNumber) ).toList().size()>=1);
+				
+				claims = new Claims(0, policy.getPolicyID(),claimNumber , accidentDate, accidentLocation,accidentDescription, descriptionOfDamage, estimateCost);
+
+				selectionChoice="N";
+			}
+			
+		}while(selectionChoice.equalsIgnoreCase("Y"));
+		
+		return claims;
+	}
+
+}

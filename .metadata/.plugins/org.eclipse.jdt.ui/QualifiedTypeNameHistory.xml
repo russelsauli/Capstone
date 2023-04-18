@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="java.time.format.DateTimeFormatter"/>
+    <fullyQualifiedTypeName name="java.util.Scanner"/>
+    <fullyQualifiedTypeName name="java.util.Iterator"/>
+    <fullyQualifiedTypeName name="java.util.Map"/>
+    <fullyQualifiedTypeName name="java.security.Policy"/>
+    <fullyQualifiedTypeName name="java.sql.Connection"/>
+    <fullyQualifiedTypeName name="java.sql.Statement"/>
+    <fullyQualifiedTypeName name="java.time.LocalDate"/>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="models.PolicyHolder"/>
+    <fullyQualifiedTypeName name="databaseConnection.DBConnection"/>
+    <fullyQualifiedTypeName name="models.Vehicle"/>
+    <fullyQualifiedTypeName name="models.CustomerAccount"/>
+    <fullyQualifiedTypeName name="models.Policy"/>
+    <fullyQualifiedTypeName name="main.Print"/>
+    <fullyQualifiedTypeName name="models.RatingEngine"/>
+    <fullyQualifiedTypeName name="model.Claims"/>
+    <fullyQualifiedTypeName name="models.Claims"/>
+    <fullyQualifiedTypeName name="java.util.ArrayList"/>
+    <fullyQualifiedTypeName name="java.lang.System"/>
+</qualifiedTypeNameHistroy>

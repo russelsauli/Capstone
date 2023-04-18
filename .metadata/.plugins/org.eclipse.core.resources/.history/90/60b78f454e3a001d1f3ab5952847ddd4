@@ -1,0 +1,66 @@
+package models;
+
+import java.util.Calendar;
+
+public class RatingEngine extends Vehicle{
+
+	
+	public double ratingEngine(Vehicle vehicle) {	// calculate the rating engine per car
+		
+		Calendar calendar = Calendar.getInstance();	// instantiate calendar that we import
+
+		double vpf = 0;		//set vpf to 0
+
+		int dlx = Integer.parseInt(vehicle.getDriversLicenseIssued().substring(0, vehicle.getDriversLicenseIssued().indexOf("-")));	// substirng or getting  only the year of the license issued date using substring method and index of 
+
+		System.out.println(dlx);
+		dlx = calendar.get(Calendar.YEAR) - dlx;	// substrution of current year and the result of dlx
+
+		if (dlx <= 0) {	 // if dlx is less tha 0 setting it to 1
+			dlx = 1;
+		}
+
+		int vehicleAge = calendar.get(Calendar.YEAR) - vehicle.getYear();	//subtrang the curent year and the year
+		
+		System.out.println(dlx);
+		
+		System.out.println(vehicleAge);
+		
+		
+		// setting value of vpf base on the age of vehicle 
+		if (vehicleAge <= 1) {
+			vpf = 0.01;
+		} else if (vehicleAge <= 3) {
+			vpf = 0.008;
+		} else if (vehicleAge <= 5) {
+			vpf = 0.007;
+		} else if (vehicleAge <= 10) {
+			vpf = 0.006;
+		} else if (vehicleAge <= 15) {
+			vpf = 0.004;
+		} else if (vehicleAge <= 20) {
+			vpf = 0.002;
+		}
+
+		else if (vehicleAge <= 40) {
+			vpf = 0.001;
+		}
+		
+		else if(vehicleAge>=40) {
+			vpf = 0.001;
+		}
+
+		System.out.println(vpf);
+		
+		// computation of premium charged per vehicle
+		vehicle.setPremiumCharged((vehicle.getPurchasePrice() * vpf) + ((this.getPurchasePrice() / 100) / dlx));
+		
+		vehicle.setPremiumCharged(Math.round(vehicle.premiumCharged * 100.0) / 100.0);
+		
+		// to make a 2 decimal point value
+		
+		
+		return  vehicle.getPremiumCharged();
+
+	}
+}

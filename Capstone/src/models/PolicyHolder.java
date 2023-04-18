@@ -1,0 +1,232 @@
+
+
+package models;
+
+/**
+* Java Course 4 Capstone
+*
+* @author John Russel Sauli
+* @Description:  A simple Automobile Insurance Policy and 
+* 				Claims Administration system (PAS) will be created
+* 			    to manage customer automobile insurance policies 
+* 				and as well as accident claims for an insurance company. 
+* Created Date: 6/27/2022
+* Modified Date:9/23/2022
+* @Modified By: John Russel Sauli
+*
+*/
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+import databaseConnection.DBConnection;
+
+public class PolicyHolder extends CustomerAccount implements DatabaseFunctions{
+
+	DBConnection connection = new DBConnection();
+
+	// policyHolder attributes
+	private int customerAccountID;
+
+	private String firstName;
+
+	private String lastName;
+
+	private String address;
+
+	private String driversLicence;
+
+	private String birthDate;
+
+	private String driversLicenseIssued;
+
+	private int policyHolderID = 0;
+
+	
+	// to be able to used other method within the class  due to we had created a new PolicyHolder with constructor
+
+	public PolicyHolder() {	}
+	
+	
+	// constructor of policy holder that set values
+	public PolicyHolder(int cusrtomerAccountID, int policyHolderID, String firstName, String lastName, String address,
+			String birthDate, String licenseNumber, String driversLicenseIssued) {
+		
+		this.customerAccountID = cusrtomerAccountID;
+
+		this.policyHolderID = policyHolderID;
+
+		this.firstName = firstName;
+
+		this.lastName = lastName;
+
+		this.address = address;
+
+		this.birthDate = birthDate;
+
+		this.driversLicence = licenseNumber;
+
+		this.driversLicenseIssued = driversLicenseIssued;
+	}
+	
+	@Override
+	public void save(Object policyholder) {
+		
+		Connection dbConnection =connection.setConnection();	// set connection
+		
+		try {
+			
+			connection.setConnection(); // set connection
+
+			String saveData = "INSERT INTO policy_holder (customer_accountID, first_name, last_name,address,birth_date,license_number,license_number_issue)VALUES (?,?,?,?,?,?,?)";
+
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(saveData,
+					Statement.RETURN_GENERATED_KEYS);	
+
+			preparedStatement.setInt(1, this.getCustomerAccountID());
+			preparedStatement.setString(2, firstName.toUpperCase());
+			preparedStatement.setString(3, lastName.toUpperCase());
+			preparedStatement.setString(4, address.toUpperCase());
+			preparedStatement.setString(5, birthDate.toUpperCase());
+			preparedStatement.setString(6, driversLicence.toUpperCase());
+			preparedStatement.setString(7, driversLicenseIssued.toUpperCase());
+
+			preparedStatement.executeUpdate();
+
+			ResultSet resultSet = preparedStatement.getGeneratedKeys();	// result set the generated policyHolderID
+			if (resultSet.next())
+				
+				this.setPolicyHolderID(resultSet.getInt(1));	// get and set the value of generated policyHolderID to policyHolderID attribute
+
+			dbConnection.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
+	public ArrayList<Object> loadData() {
+		
+		PolicyHolder tempPolicyHolder = new PolicyHolder();	// new object policyholder
+		
+		ArrayList<Object> listOfData = new ArrayList<Object>();	//arraylist of policyholder
+
+		Connection dbConnection =connection.setConnection();	
+		
+		try {
+
+			connection.setConnection();	// set connection
+			
+			String loadData = "SELECT * FROM policy_holder LEFT JOIN customer_account on policy_holder.customer_accountID =customer_account.customer_accountID";
+
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(loadData);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {	// loop the result set and set the value to the constructor 
+
+				// set of value for new policyholder 
+				
+				tempPolicyHolder= new PolicyHolder();
+				
+				tempPolicyHolder.setPolicyHolderID(resultSet.getInt("policy_holderID"));
+				tempPolicyHolder.setFirstNamePH(resultSet.getString("policy_holder.first_name"));
+				tempPolicyHolder.setLastNamePH(resultSet.getString("policy_holder.last_name"));
+				tempPolicyHolder.setAddressPH(resultSet.getString("policy_holder.address"));
+				tempPolicyHolder.setBirthDate(resultSet.getString("birth_date"));
+				tempPolicyHolder.setDriversLicence(resultSet.getString("license_number"));
+				tempPolicyHolder.setDriversLicenseIssued(resultSet.getString("license_number_issue"));
+				tempPolicyHolder.setCustomerAccountID(resultSet.getInt("policy_holder.customer_accountID"));
+				
+				tempPolicyHolder.setAccountNumber(resultSet.getString("account_number"));
+            	tempPolicyHolder.setFirstName(resultSet.getString("first_name"));
+            	tempPolicyHolder.setLastName(resultSet.getString("last_name"));
+            	tempPolicyHolder.setAddress(resultSet.getString("address"));
+				
+            	
+            	listOfData.add(tempPolicyHolder);		// add a new data to the list
+			}
+
+			dbConnection.close();	// connection close
+
+		} catch (SQLException e) {
+			
+			System.out.println(e);
+		}
+
+		return listOfData;
+		
+	}
+	
+
+	// getters and setters
+	public int getCustomerAccountID() {
+		return customerAccountID;
+	}
+
+	public void setCustomerAccountID(int customerAccountID) {
+		this.customerAccountID = customerAccountID;
+	}
+
+	public String getFirstNamePH() {
+		return firstName;
+	}
+
+	public void setFirstNamePH(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastNamePH() {
+		return lastName;
+	}
+
+	public void setLastNamePH(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getAddressPH() {
+		return address;
+	}
+
+	public void setAddressPH(String address) {
+		this.address = address;
+	}
+
+	public String getDriversLicence() {
+		return driversLicence;
+	}
+
+	public void setDriversLicence(String driversLicence) {
+		this.driversLicence = driversLicence;
+	}
+
+	public String getBirthDate() {
+		return birthDate;
+	}
+
+	public void setBirthDate(String birthDate) {
+		this.birthDate = birthDate;
+	}
+
+	public String getDriversLicenseIssued() {
+		return driversLicenseIssued;
+	}
+
+	public void setDriversLicenseIssued(String driversLicenseIssued) {
+		this.driversLicenseIssued = driversLicenseIssued;
+	}
+
+	public int getPolicyHolderID() {
+		return policyHolderID;
+	}
+
+	public void setPolicyHolderID(int policyHolderID) {
+		this.policyHolderID = policyHolderID;
+	}
+
+}

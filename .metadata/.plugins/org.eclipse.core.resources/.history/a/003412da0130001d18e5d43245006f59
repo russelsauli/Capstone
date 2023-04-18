@@ -1,0 +1,133 @@
+package main;
+
+import java.util.ArrayList;
+
+import models.CustomerAccount;
+import models.PolicyHolder;
+
+
+public class CapstoneProcess {
+
+	InputValidator inputValidator= new InputValidator();
+	
+	CapstoneSubProcess capstoneSubprocess = new CapstoneSubProcess();
+	
+	CustomerAccount customerAccount = new CustomerAccount(); 
+	PolicyHolder policyHolder = new PolicyHolder(); 
+	
+	ArrayList<Object> customerList= new ArrayList<Object>();
+	ArrayList<Object> policyHolderList= new ArrayList<Object>();
+	
+	Print print = new Print();
+	
+	String selectionChoice;
+	
+	public void createCustomerAccount() {
+		
+		customerList=customerAccount.loadData();
+		
+		do {
+			
+			customerAccount.setAccountNumber(capstoneSubprocess.generateNumber(4, 9999,""));
+		
+		}while(customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equals(customerAccount.getAccountNumber())).toList().size()>=1);
+	
+		
+		print.headerLabel(("Create a new Customer Account").toUpperCase());
+		
+		customerAccount.setFirstName(inputValidator.returnString("\nEnter first name :")); 
+		
+		customerAccount.setLastName(inputValidator.returnString("\nEnter last name :")); 
+		
+		if (customerList.stream().filter(a->((CustomerAccount) a).getFirstName().equalsIgnoreCase(customerAccount.getFirstName()) && ((CustomerAccount) a).getLastName().equalsIgnoreCase(customerAccount.getLastName())).toList().size()>=1) {		// check if the customer is existing base on first name and last name
+			
+			print.headerLabel("CUSTOMER ACCOUNT ALREADY EXIST");
+			print.headerLabel("PREESS ENTER TO CONTINUE");
+			inputValidator.input.nextLine();
+		} 
+		else {
+	
+			customerAccount.setAddress(inputValidator.returnString("\nEnter address :")); 
+			
+			print.printCustomerAccount(customerAccount);
+			
+			print.headerLabel("DO YOU WANT TO CREATE NEW ACCOUNT USING THIS DATA : Y/N ");	// call and set values  for the method headerLabel to print label
+			
+			selectionChoice = inputValidator.returnChoice("Select: "); 		// return Y/N value if input match in Y/N  method is below
+			
+			if (selectionChoice.equalsIgnoreCase("Y")) {
+
+				customerAccount.save(customerAccount);												   // save the customer account data to the database
+
+				print.headerLabel("SUCCESSFULLY CREATE NEW ACCOUNT");
+				print.headerLabel("PREESS ENTER TO CONTINUE");
+				inputValidator.input.nextLine();
+			} 
+			else{
+				
+				print.headerLabel("DATA DIDN'T SAVE");
+				print.headerLabel("PREESS ENTER TO CONTINUE");
+				inputValidator.input.nextLine();
+			}
+		}
+	}
+	
+	public void getAndBuyPolicyQuote() {
+		
+		String effectiveDate;
+		
+		
+		
+		customerList=customerAccount.loadData();
+		
+		print.headerLabel("Get a policy quote and buy the policy.");
+		
+		String accountNumber=inputValidator.returnString("Input Customer account: ");
+		
+		if(customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList().size()>=1) {
+			
+			policyHolderList=policyHolder.loadData();
+			
+			for(Object policyHolder:policyHolderList) {
+				
+				print.printPolicyHolder((PolicyHolder)policyHolder, "List of policyholder");
+			}
+			
+			
+			
+		}
+		else {
+			print.headerLabel("Account number not exist");
+			print.headerLabel("PREESS ENTER TO CONTINUE");
+			inputValidator.input.nextLine();
+		}
+		
+		
+		
+	}
+	
+
+	public void searchCustomer() {
+		
+		customerList=customerAccount.loadData();
+	
+		print.headerLabel("Search for a Customer account ");
+		
+		String accountNumber=inputValidator.returnString("Input Customer account");
+		
+		if(customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList().size()>=1) {
+			
+			for(Object customerAccount:customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList()) {
+				
+				print.printCustomerAccount((CustomerAccount) customerAccount);
+			}
+		}
+		else {
+			print.headerLabel("Account number not exist");
+			print.headerLabel("PREESS ENTER TO CONTINUE");
+			inputValidator.input.nextLine();
+		}
+		
+	}
+	
+}

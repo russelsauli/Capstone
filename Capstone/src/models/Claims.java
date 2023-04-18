@@ -1,0 +1,221 @@
+
+package models;
+
+/**
+* Java Course 4 Capstone
+*
+* @author John Russel Sauli
+* @Description:  A simple Automobile Insurance Policy and 
+* 				Claims Administration system (PAS) will be created
+* 			    to manage customer automobile insurance policies 
+* 				and as well as accident claims for an insurance company. 
+* Created Date: 6/26/2022
+* Modified Date:9/23/2022
+* @Modified By: John Russel Sauli
+*
+*/
+
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+public class Claims extends Policy {
+
+	// attributes of Claims class
+	private int claimID;
+	private int PolicyID;
+	private String claimNumber;
+	private String accidentDate;
+	private String accidentLocation;
+	private String accidentDescription;
+	private String descriptionOfDamage;
+	private double estimateCost;
+
+	public Claims() {}
+
+	// constructor for claims class that set value
+	public Claims(int claimID, int PolicyID, String claimNumber, String accidentDate, String accidentLocation,
+			String accidentDescription, String descriptionOfDamage, double estimateCost) {
+
+		this.claimID = claimID;
+		this.PolicyID = PolicyID;
+		this.claimNumber = claimNumber;
+		this.accidentDate = accidentDate;
+		this.accidentLocation = accidentLocation;
+		this.accidentDescription = accidentDescription;
+		this.descriptionOfDamage = descriptionOfDamage;
+		this.estimateCost = estimateCost;
+	}
+	
+	@Override
+	public void save(Object claim) {
+		// a method that save data of claim 
+		
+		try {
+
+			Connection dbConnection =connection.setConnection();// instiantiate connection
+
+			String saveData = "INSERT INTO claims (claim_Number ,date_of_accdident,accident_location,description_of_accident,description_of_damage,estimate_cost,policyID )VALUES (?,?,?,?,?,?,?)";		// query for creating/saving data of claim
+
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(saveData,Statement.RETURN_GENERATED_KEYS);	// return the generated policyID when insert
+			
+			preparedStatement.setString(1, claimNumber);
+			preparedStatement.setString(2, accidentDate);
+			preparedStatement.setString(3, accidentLocation);
+			preparedStatement.setString(4, accidentDescription);
+			preparedStatement.setString(5, descriptionOfDamage);
+			preparedStatement.setDouble(6, estimateCost);
+			preparedStatement.setInt(7, PolicyID);
+			preparedStatement.executeUpdate();
+
+			ResultSet resultSet = preparedStatement.getGeneratedKeys();	// fetch the generated policyID
+			if (resultSet.next()) {
+				this.setPolicyID(resultSet.getInt(1));	// get and set the value of generated poicyID to attribute policyJD in the class POlicy
+			}
+			
+			dbConnection.close();
+			
+		} catch (SQLException e) {
+			System.out.println(e);
+		}
+		
+	}
+	// a method that return a arraylist of object that contains of claim data 
+	public ArrayList<Object> loadData() { 
+		
+		Claims tempclaims= new Claims();	// new object policyholder
+		
+		ArrayList<Object> listOfData = new ArrayList<Object>();	//arraylist of policyholder
+
+		Connection dbConnection =connection.setConnection();	
+		
+		try {
+			
+			String loadData = "SELECT * FROM claims LEFT JOIN policy ON claims.policyID = policy.policyID LEFT JOIN policy_holder ON policy.policy_holderID = policy_holder.policy_holderID  LEFT JOIN customer_account ON policy_holder.customer_accountID = customer_account.customer_accountID";
+
+			PreparedStatement preparedStatement = dbConnection.prepareStatement(loadData);
+
+			ResultSet resultSet = preparedStatement.executeQuery();
+
+			while (resultSet.next()) {	// loop the result set and set the value to the constructor 
+
+				// set of value for new policyholder 
+				
+				tempclaims= new Claims();
+				
+				tempclaims.setClaimID(resultSet.getInt("claimsID"));
+				tempclaims.setPolicyID(resultSet.getInt("claims.policyID"));
+				tempclaims.setClaimNumber(resultSet.getString("claim_number"));
+				tempclaims.setAccidentDate(resultSet.getString("date_of_accdident"));
+				tempclaims.setAccidentLocation(resultSet.getString("accident_location"));
+				tempclaims.setAccidentDescription(resultSet.getString("description_of_accident"));
+				tempclaims.setDescriptionOfDamage(resultSet.getString("description_of_damage"));
+				tempclaims.setEstimateCost(resultSet.getDouble("estimate_cost"));
+				
+				tempclaims.setPolicyHolderID(resultSet.getInt("policy_holderID"));
+				tempclaims.setFirstNamePH(resultSet.getString("policy_holder.first_name"));
+				tempclaims.setLastNamePH(resultSet.getString("policy_holder.last_name"));
+				tempclaims.setAddressPH(resultSet.getString("policy_holder.address"));
+				tempclaims.setBirthDate(resultSet.getString("birth_date"));
+				tempclaims.setDriversLicence(resultSet.getString("license_number"));
+				tempclaims.setDriversLicenseIssued(resultSet.getString("license_number_issue"));
+				tempclaims.setCustomerAccountID(resultSet.getInt("policy_holder.customer_accountID"));
+				
+				tempclaims.setAccountNumber(resultSet.getString("account_number"));
+				tempclaims.setFirstName(resultSet.getString("first_name"));
+				tempclaims.setLastName(resultSet.getString("last_name"));
+				tempclaims.setAddress(resultSet.getString("address"));
+				
+				tempclaims.setPolicyID(resultSet.getInt("policyID"));
+				tempclaims.setPolicyNumber(resultSet.getString("policy_number"));
+				tempclaims.setEffectiveDate(resultSet.getString("effective_date"));
+				tempclaims.setExpirationDate(resultSet.getString("expiration_date"));
+				tempclaims.setPremiumCharge(resultSet.getDouble("premium"));
+				tempclaims.setPolicyHolderID(resultSet.getInt("policy_holderID"));
+				tempclaims.setIsClaimed(resultSet.getInt("isClaimed"));
+				tempclaims.setIsExpired(resultSet.getInt("isExpired"));
+				
+            	listOfData.add(tempclaims);		// add a new data to the list
+			}
+
+			dbConnection.close();	// connection close
+
+		} catch (SQLException e) {
+			
+			System.out.println(e);
+		}
+
+		return listOfData;
+		
+	}
+	
+	
+	public int getClaimID() {
+		return claimID;
+	}
+
+	public void setClaimID(int claimID) {
+		this.claimID = claimID;
+	}
+
+	public int getPolicyID() {
+		return PolicyID;
+	}
+
+	public void setPolicyID(int policyID) {
+		PolicyID = policyID;
+	}
+
+	public String getClaimNumber() {
+		return claimNumber;
+	}
+
+	public void setClaimNumber(String claimNumber) {
+		this.claimNumber = claimNumber;
+	}
+
+	public String getAccidentDate() {
+		return accidentDate;
+	}
+
+	public void setAccidentDate(String accidentDate) {
+		this.accidentDate = accidentDate;
+	}
+
+	public String getAccidentLocation() {
+		return accidentLocation;
+	}
+
+	public void setAccidentLocation(String accidentLocation) {
+		this.accidentLocation = accidentLocation;
+	}
+
+	public String getAccidentDescription() {
+		return accidentDescription;
+	}
+
+	public void setAccidentDescription(String accidentDescription) {
+		this.accidentDescription = accidentDescription;
+	}
+
+	public String getDescriptionOfDamage() {
+		return descriptionOfDamage;
+	}
+
+	public void setDescriptionOfDamage(String descriptionOfDamage) {
+		this.descriptionOfDamage = descriptionOfDamage;
+	}
+
+	public double getEstimateCost() {
+		return estimateCost;
+	}
+
+	public void setEstimateCost(double estimateCost) {
+		this.estimateCost = estimateCost;
+	}
+
+}

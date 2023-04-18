@@ -1,0 +1,434 @@
+package main;
+/**
+* Java Course 4 Capstone
+*
+* @author John Russel Sauli
+* @Description:  A simple Automobile Insurance Policy and 
+* 				Claims Administration system (PAS) will be created
+* 			    to manage customer automobile insurance policies 
+* 				and as well as accident claims for an insurance company. 
+* Created Date: 6/26/2022
+* Modified Date:9/23/2022
+* @Modified By: John Russel Sauli
+*
+*/
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+
+import models.Claims;
+import models.CustomerAccount;
+import models.Policy;
+import models.PolicyHolder;
+import models.RatingEngine;
+import models.Vehicle;
+
+// a class that copntaine the all process of the capstone
+public class CapstoneProcess {
+
+	InputValidator inputValidator= new InputValidator();	// instiantiate teh input validator class which contains all the validation of inputs
+	
+	CapstoneSubProcess capstoneSubprocess = new CapstoneSubProcess();	// instiantiate the capstonesubprocess class which contains all sub process needed by the process class
+
+	Print print = new Print();	// instiantiate the print class which contain all the printing of object
+	
+	String selectionChoice;	// the selected choices 
+	
+	String customerAccountNumber;	// the account number of customer account
+	
+	// creating a customer account
+	public void createCustomerAccount() {
+	
+		CustomerAccount customerAccount = new CustomerAccount(); 	// instiantiate customerAccount class
+		
+		ArrayList<Object> customerList= new ArrayList<Object>();	// arraylist of object where we load all the data for customer
+		
+		String firstName,lastName,address;	
+		
+		print.headerLabel(("Create a new Customer Account").toUpperCase());
+		
+		firstName=inputValidator.returnString("\nEnter first name :").toUpperCase(); 
+		
+		lastName=inputValidator.returnString("\nEnter last name :").toUpperCase(); 
+		
+		customerList=customerAccount.loadData();	// setting value for customerlist from loaddata(all data of customerAccount from database)
+		
+		// stream filter used to filter the data of the customerList and adding filtration 
+		if (customerList.stream().filter(a->((CustomerAccount) a).getFirstName().equals(firstName) && ((CustomerAccount) a).getLastName().equals(lastName)).toList().size()>=1) {		// check if the customer is existing base on first name and last name
+			
+			print.headerLabel("CUSTOMER ACCOUNT ALREADY EXIST");
+		} 
+		else {
+			
+			address=inputValidator.returnString("\nEnter address :"); 
+			
+			do {
+				
+				customerList=customerAccount.loadData();
+				
+				customerAccountNumber=capstoneSubprocess.generateNumber(4, 9999,""); 
+				
+			}while(customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equalsIgnoreCase(customerAccountNumber)).toList().size()>=1);
+			
+			customerAccount = new CustomerAccount(0,customerAccountNumber,firstName,lastName,address);
+			
+			print.printCustomerAccount(customerAccount);
+			
+			print.headerLabel("DO YOU WANT TO CREATE NEW ACCOUNT USING THIS DATA : Y/N ");	
+			
+			selectionChoice = inputValidator.returnChoice("Select: "); 		
+			
+			if (selectionChoice.equalsIgnoreCase("Y")) {
+
+				customerAccount.save(customerAccount);	// save the data of customerAccount to database										 
+
+				print.headerLabel("SUCCESSFULLY CREATE NEW ACCOUNT");
+			} 
+			else{
+				
+				print.headerLabel("DATA DIDN'T SAVE");
+			}
+		}
+	}
+	
+	// a method that create polily
+	public void getAndBuyPolicyQuote() {
+		
+		// instaiantiate the classes
+		CustomerAccount customerAccount = new CustomerAccount(); 
+		PolicyHolder policyHolder = new PolicyHolder(); 
+		Policy policy = new Policy(); 
+		Vehicle vehicle = new Vehicle(); 
+		RatingEngine ratingEngine = new RatingEngine();
+		
+		// a arraylist where we set the load from database 
+		ArrayList<Object> customerList= new ArrayList<Object>();
+		ArrayList<Vehicle> vehicleList= new ArrayList<Vehicle>();
+
+		double premium=0;	// total premium of policy
+		
+		print.headerLabel("Get a policy quote and buy the policy.");
+		
+		String accountNumber=inputValidator.returnString("Input Customer account: ");
+		
+		customerList=customerAccount.loadData();	// set value of customer account
+		
+		if(customerList.stream().filter(a->((CustomerAccount) a).getAccountNumber().equals(accountNumber)).toList().size()>=1) {
+			
+			policy=capstoneSubprocess.policyData();	// call the policyData from capstoneSubprocess where we set value of policy
+			policyHolder=capstoneSubprocess.addPolicyHolder(accountNumber, policyHolder);	// call the addPolicyHolder from capstoneSubprocess where we set value of policyholder
+			vehicleList=capstoneSubprocess.addVehicle(vehicleList,policyHolder);	// call the addVehicle from capstoneSubprocess where we set value of vehiclelist
+			
+			
+			for(Vehicle vehicleItem:vehicleList){	// iterate list of value of vehiclelist
+				
+				vehicle.setPremiumCharged(ratingEngine.ratingEngine(vehicleItem));	// set the value of premium per car using rating engine
+				
+				premium=premium+vehicleItem.getPremiumCharged();	// total premium of policy 
+			}
+			
+			policy.setPremiumCharge(premium);	// set the total premium of policy
+			
+			print.printPolicy(policy);	// print policy detail
+			
+			print.printPolicyHolder(policyHolder, "POLICY HOLDER DETAIL");	// print policy holder details
+			
+			String format = "%-20s %-20S %-20s %-20S %-10s  \n";	// the format value 
+			
+			print.headerLabel("VEHICLE");	
+			System.out.printf(format,"MAKE","MODEL","YEAR","PURCHASE PRICE", "PREMIUM CHARGED");
+			
+			for(Vehicle vehicleItem:vehicleList){	// iterate the value of vehicle list
+				
+				print.printVehicle(vehicleItem);	// print the vehicle value
+			}
+			
+			selectionChoice=inputValidator.returnChoice("DO YOU WANT TO SAVE THIS POLICY DETAILS Y/N");	
+			
+			if(selectionChoice.equalsIgnoreCase("Y")) {
+				
+				if(policyHolder.getPolicyHolderID()==0) {	// check if the policy holder is not existing or new one
+					
+					policyHolder.save(policyHolder);	// save policy holder data
+				}
+				
+				policy.setPolicyHolderID(policyHolder.getPolicyHolderID());	// set the policy holderID for policy
+			
+				policy.save(policy);	// save policy data to database
+				
+				for(Vehicle vehicleItem:vehicleList){	// iterate the value of vehicle
+					
+					vehicle = new Vehicle();	// instiantiate vehicle
+					
+					vehicleItem.setPolicyID(policy.getPolicyID());	// set policyID for each vehicle that will be iterate
+					
+					vehicle=vehicleItem;	// set value of vehicle from iterate value of vehicle
+					
+					vehicle.save(vehicle);	// save vehicle
+				}
+				
+				print.headerLabel("SUCCESFULLY CREATE NEW POLICY");
+			}
+			else {
+				print.headerLabel("CREATION OF POLICY IS CANCELLED");
+			}
+		}
+		else {
+			print.headerLabel("Account number not exist");	// print if account number not exist
+		}
+	}
+	
+	// a method that cancel policy
+	public void cancelPolicy() {
+		
+		Policy policy = new Policy();	// instiamtiate policy
+		ArrayList<Object> policyList = new ArrayList<Object>();	
+		
+		print.headerLabel("CANCEL A SPECIFIC POLICY");
+		
+		String policyNumber;
+	
+		policyNumber =inputValidator.returnString("INPUT POLICY# : ");
+		
+		policyList=policy.loadData();	// set  data for policylist from policy database
+		
+		// check if policy number is existing and the policy is canceled
+		if(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) && ((Policy) a).getIsExpired()==1).toList().size()>=1) {
+			
+			print.headerLabel("POLICY ALREADY CANCELED");
+		}
+		// check if policy number is existing and the policy is canceled and not yet canceled
+		else if(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList().size()>=1) {
+
+			// load the data that match the filtration and set value of it to policy
+			for(Object policyItem:policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList()) {	
+				
+				policy=(Policy) policyItem;
+			}
+			
+			print.headerLabel("DO YOU WANT TO CANCEL THIS POLICY");
+			print.printPolicy(policy);
+			print.printPolicyHolder(policy, "POLICY HOLDER INFO");
+			
+			selectionChoice=inputValidator.returnChoice("\nDO YOU WEANT TO CANCEL THIS POLICY "+policy.getPolicyNumber()+" Y/N: ");
+			if(selectionChoice.equalsIgnoreCase("Y")) {
+				
+				policy.setIsExpired(1);	// set the policy IsExpired to 1 
+				policy.update(policy);	// update the policy 
+				
+				print.headerLabel("SUCCESSFULLY CANCEL POLICY");
+			}
+			else {
+				print.headerLabel("POLICY CANCELATION FAILED");
+			}
+		}
+		else {
+			print.headerLabel("POLICY NUMBER NOT EXIST");
+		}
+	}
+	
+	// a method that file the accident claims
+	public void fileAccidentClaims() {
+		
+		// intiantiate the class 
+		Policy policy = new Policy();
+		Claims claims = new Claims();
+		
+		ArrayList<Object> policyList= new ArrayList<Object>();	// instiantiate a arraylist object where we load data from database
+		
+		String policyNumber;
+		
+		print.headerLabel("FILE AN ACCIDENT CLAIM AGAINST A POLICY");
+		
+		policyNumber = inputValidator.returnString("INPUT POLICY NUMBER: ");
+		
+		policyList=policy.loadData();
+		
+		// check if the policy effective date is after or on today date and  policy number match
+		if(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) && LocalDate.parse(((Policy) a).getEffectiveDate()).isAfter(LocalDate.now())).toList().size()>=1){
+			print.headerLabel("CANT FILE CLAIM POLICY IS NOT YET EFFECTIVE BASE ON TODAY DATE");
+		}
+		// check if the policy number match
+		else if(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList().size()>=1) {
+			
+			for(Object policyItem:policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList()) {
+				
+				policy=(Policy) policyItem;	// set the value of policy
+			}
+			
+			claims=capstoneSubprocess.claimDetail(policy);	// set value for claims 
+			
+			if(claims.getPolicyID()!=0) {	// check if claim had been set value
+				print.printClaims(claims);
+				selectionChoice=inputValidator.returnChoice("DO YOU WANT TO SAVE THIS CLAIM IN THIS POLICY  "+policy.getPolicyNumber()+" Y/N: ");
+				
+				if(selectionChoice.equalsIgnoreCase("Y")) {
+					
+					claims.save(claims);	// save claims
+					
+					policy.setIsClaimed(1);	//  policy Isclaimed value to 1
+					
+					policy.update(policy);	// update the policy
+					
+					print.headerLabel("POLICY SUCCESSFULLY SAVE");
+				}
+				else {
+					print.headerLabel("FILE CLAIM NOT SAVE");
+				}
+			}
+		}
+		else {
+			print.headerLabel("POLICY NUMBER NOT EXIST");
+		}
+	}
+	
+	
+	// a method that search customer
+	public void searchCustomer() {
+		
+		// instainatiate class
+		CustomerAccount customerAccount = new CustomerAccount(); 
+		PolicyHolder policyHolder = new PolicyHolder(); 
+		Policy policy = new Policy(); 
+		
+		// arralist of object where we set value from database
+		ArrayList<Object> customerList= new ArrayList<Object>();
+		ArrayList<Object> policyHolderList= new ArrayList<Object>();
+		ArrayList<Object> policyList= new ArrayList<Object>();
+		
+		String firstName,lastName;
+		
+		customerList=customerAccount.loadData();	// load and set data of customer from database
+		
+		policyHolderList=policyHolder.loadData();	// load and set data of policyholderlist from database
+		
+		policyList=policy.loadData();	// load adn set data of polict from database
+		
+		print.headerLabel("Search for a Customer account ");
+		
+		firstName=inputValidator.returnString("Input First Name: ");
+		lastName=inputValidator.returnString( "Input Last  Name: ");
+		
+		// check if customer first name and last name have value in database
+		if(customerList.stream().filter(a->((CustomerAccount) a).getFirstName().equalsIgnoreCase(firstName) &&((CustomerAccount) a).getLastName().equalsIgnoreCase(lastName) ).toList().size()>=1) {
+			
+			// load and print value base on filtraion 
+			for(Object customerAccountItem:customerList.stream().filter(a->((CustomerAccount) a).getFirstName().equalsIgnoreCase(firstName) &&((CustomerAccount) a).getLastName().equalsIgnoreCase(lastName) ).toList()) {
+				
+				print.printCustomerAccount((CustomerAccount) customerAccountItem);
+			
+				// load and print value base on filtraion 
+				for(Object policyHolderItem:policyHolderList.stream().filter(a->((PolicyHolder) a).getCustomerAccountID()==((CustomerAccount) customerAccountItem ).getCustomerAccountID()).toList()) {
+					
+					print.printPolicyHolder((PolicyHolder) policyHolderItem, "POLICY HOLDER DETAILS");
+					
+					// load and print value base on filtraion 
+					for(Object policyItem:policyList.stream().filter(b->((Policy) b).getPolicyHolderID()== ((PolicyHolder) policyHolderItem ).getPolicyHolderID()).toList()) {
+						
+						print.printPolicy((Policy) policyItem);
+					}
+				}
+			}
+		}
+		else {
+			print.headerLabel("Customer account not exist");
+		}
+	}
+	
+	// search policy
+	public void searchPolicy() {
+		
+		// instiantiate class
+		CustomerAccount customerAccount = new CustomerAccount(); 
+		Policy policy = new Policy(); 
+		Vehicle vehicle = new Vehicle();
+		PolicyHolder policyHolder = new PolicyHolder(); 
+		
+		// array list of object where we set value from database
+		ArrayList<Object> policyHolderList= new ArrayList<Object>();
+		ArrayList<Object> customerList= new ArrayList<Object>();
+		ArrayList<Object> policyList= new ArrayList<Object>();
+		ArrayList<Object> vehicleList= new ArrayList<Object>();
+		
+		String policyNumber;
+		
+		customerList=customerAccount.loadData();	// load data from datbase and set value from customer account
+		
+		policyHolderList=policyHolder.loadData();	// load data from datbase and set value from policyholder
+		
+		policyList=policy.loadData();	// load data from datbase and set value from policy
+		
+		vehicleList=vehicle.loadData();	// load data from datbase and set value from vehicle
+		
+		print.headerLabel("Search for a Customer account ");
+		
+		policyNumber=inputValidator.returnString("Input Policy number: ");
+		
+		// if policy number exist
+		if(policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList().size()>=1) {
+			
+			for(Object policyItem:policyList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList()) {
+				
+				for(Object policyHolderItem:policyHolderList.stream().filter(a->((PolicyHolder) a).getPolicyHolderID()== ((Policy) policyItem ).getPolicyHolderID()).toList()) {
+					
+					for(Object customerItem:customerList.stream().filter(a->((CustomerAccount) a).getCustomerAccountID()== ((PolicyHolder) policyHolderItem ).getCustomerAccountID()).toList()) {
+						
+						//print value for poicy customer account and policy holder
+						print.printPolicy((Policy) policyItem);
+						print.printPolicyHolder((PolicyHolder) policyHolderItem, "POLICY HOLDER DETAILS");
+						print.printCustomerAccount((CustomerAccount) customerItem);
+					}
+				}
+			
+				print.headerLabel("VEHICLE LIST");
+				
+				String format = "%-20s %-20S %-20s %-20S %-10s  \n";
+				
+				System.out.format(format, "BRAND", "MODEL", "YEAR", "PURCHASE PRICE", "PREMIUM CHARGED");
+				// iterate and print the value pf vehicle
+				for(Object vehicleItem:vehicleList.stream().filter(a->((Policy) a).getPolicyNumber().equalsIgnoreCase(policyNumber) ).toList()) {
+					
+					print.printVehicle((Vehicle) vehicleItem);
+				}
+			}
+		}
+		else {
+			print.headerLabel("POLICY NUMBER NOT EXIST");
+		}
+		
+	}
+	
+	// a method that search claims
+	public void searchClaims () {
+		
+		Claims claims = new Claims();
+		
+		ArrayList<Object> claimList= new ArrayList<Object>();
+		
+		String claimNumber;
+		
+		print.headerLabel("SEARCH FOR AND DISPLAY SPECIFIC CLAIM");
+		
+		claimNumber =inputValidator.returnString("INPUT CLAIM# : ");
+		
+		claimList=claims.loadData();
+		
+		// check iof claim number exist
+		if(claimList.stream().filter(a->((Claims) a).getClaimNumber().equalsIgnoreCase(claimNumber) ).toList().size()>=1) {
+			
+			// iterte the claimList to get the need value base on filtration 
+			for(Object claimItem:claimList.stream().filter(a->((Claims) a).getClaimNumber().equalsIgnoreCase(claimNumber) ).toList()) {
+				// print claim policy customer account and policy holder of the claim number
+				print.printClaims((Claims) claimItem);
+				print.printPolicy((Claims) claimItem);
+				print.printPolicyHolder((Claims) claimItem,"POLICY HOLDER INFO");
+				print.printCustomerAccount((Claims) claimItem);
+			}
+		}	
+		else {
+			print.headerLabel("CLAIM NUMBER NOT EXIST");
+		}
+		
+	}
+	
+}

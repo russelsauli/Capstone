@@ -1,0 +1,219 @@
+package main;
+
+
+
+import java.util.ArrayList;
+import java.util.Random;
+
+import models.CustomerAccount;
+import models.PolicyHolder;
+
+public class CapstoneSubProcess {
+	
+	InputValidator inputValidator= new InputValidator();
+	PolicyHolder policyHolder = new PolicyHolder(); 
+	ArrayList<Object> policyHolderList= new ArrayList<Object>();
+	
+	Print print = new Print();
+	public String generateNumber(int sizeFormat,int maxRandomNumber,String format) {
+		
+		Random random = new Random();
+		
+		String generateNumber="";
+		
+		int randomAccountNumber=0;	// the result of random number 
+		
+		randomAccountNumber = random.nextInt(maxRandomNumber);     // random  a number resulting 
+		
+		generateNumber=Integer.toString(randomAccountNumber);
+		
+		while(generateNumber.length()<sizeFormat) {
+			
+			generateNumber="0"+generateNumber;
+		}
+		return generateNumber;
+	}
+	
+	
+	public PolicyHolder addPolicyHolder(String accountNumber) {
+
+		PolicyHolder tempPolicyHolder= new PolicyHolder();
+		
+		String firstName , lastName,address;
+
+		print.headerLabel("ADD A POLICY HOLDER");
+		
+		String selectionChoice;
+		
+		do{
+			selectionChoice="";
+			
+			selectionChoice=inputValidator.returnString("1: CREATE NEW POLICY HOLDER \\n2: SELECT EXISTING POLICY HOLDER \\n3: OWNER OF THE ACCOUNT \\nSELECT: ");
+			
+			if(selectionChoice.equals("1")) {	// creating new policy holder
+				
+				print.headerLabel("CREATE NEW POLICY HOLDER");
+				
+				tempPolicyHolder.setFirstName(inputValidator.returnString("Enter first name :")); 
+				
+				tempPolicyHolder.setLastName("Enter last name :")); 
+				
+				
+				lastName = returnString("Enter last name :", "Incorrect input");
+				
+				tempPolicyHolder=SelectedPolicyHolder(firstName,lastName,tempCustomerAccount.getAccountNumber()); // check if policy holder exist using customer account ID and first name and last name of policy holder and set value if exist
+				
+				if (tempPolicyHolder.getCustomerAccountID()>=1) {
+					
+					headerLabel("POLICY HOLDER DETAIL ALREADY EXIST");
+				}
+				
+				else if(tempCustomerAccount.getFirstName().equalsIgnoreCase(firstName) && tempCustomerAccount.getLastName().equalsIgnoreCase(lastName)) {
+					
+					tempPolicyHolder=fillInData(tempCustomerAccount);	// call the the fillInData and return its value the value of fill in data to temPolicholder 
+					
+					tempPolicyHolder.setFirstNamePH(firstName); 		// set value for firstname of policy holder
+					
+					tempPolicyHolder.setLastNamePH(lastName);			// set value for lastname of policy holder
+						
+				}
+				else {
+					
+					address=returnString("Enter address :", "Incorrect input");
+					
+					tempPolicyHolder=fillInData(tempCustomerAccount);	// call the the fillInData and return its value the value of fill in data to temPolicholder 
+					
+					tempPolicyHolder.setAddressPH(address);				// set value for address of policy holder
+					
+					tempPolicyHolder.setFirstNamePH(firstName); 		// set value for firstname of policy holder
+					
+					tempPolicyHolder.setLastNamePH(lastName);			// set value for lastname of policy holder
+					
+				}
+			}
+			else if(selectionChoice.equals("2")) {
+				
+				headerLabel("SELECT A EXISTING POLICY HOLDER");
+				
+				firstName = returnString("ENTER FIRST NAME: ", "Incorrect input");
+				lastName = returnString("ENTER LAST NAME: ", "Incorrect input");
+				
+				tempPolicyHolder=SelectedPolicyHolder(firstName,lastName,tempCustomerAccount.getAccountNumber());	// set policy holder object value if there a existing first name and last name associated to the customer account
+				
+				if (tempPolicyHolder.getPolicyHolderID()<=0) {														// if there no policy holder data get using the mehod selectedpolicyholder
+					
+					headerLabel("POLICY HOLDER DETAIL DOESN'T EXIST WITH THIS ACCOUNT");
+				}
+			}
+			else if(selectionChoice.equals("3")) {
+				// set value of the policy holder which is also the account user
+				tempPolicyHolder=SelectedPolicyHolder(tempCustomerAccount.getFirstName(),tempCustomerAccount.getLastName(),tempCustomerAccount.getAccountNumber());
+			
+				if (tempPolicyHolder.getPolicyHolderID()==0) {							// if the customer account don't have a policy holder same with it 
+					
+					tempPolicyHolder=fillInData(tempCustomerAccount);					// set values to policy holder
+					tempPolicyHolder.setFirstNamePH(tempCustomerAccount.getFirstName());// add first name
+					tempPolicyHolder.setLastNamePH(tempCustomerAccount.getLastName());	// add last name
+					tempPolicyHolder.setAddressPH(tempCustomerAccount.getAddress());	// add address
+					tempPolicyHolder.setCustomerAccountID(tempCustomerAccount.getCustomerAccountID());	// add customerAccountID
+				}
+			}
+			else {
+				
+				headerLabel("INCORRECT INPUT");
+			}
+			
+			try {
+				
+				if(!tempPolicyHolder.getFirstNamePH().equals("")) {	// if there a values for policy holder
+					
+					printPolicyHolder(tempPolicyHolder,"");		// print policy holder  detail
+					
+					headerLabel("DO YOU WANT TO USED THIS INFORMATION FOR CREATING NEW POLICY Y/N  ");
+					selectionChoice=returnChoice("SELECT: ","INCORRECT INPUT");
+				
+				}
+				
+			}catch(Exception e) {}
+			
+		}while(!selectionChoice.equalsIgnoreCase("Y"));
+		
+		selectionChoice="";
+		return tempPolicyHolder;	// return the value of policy holder
+		
+	}
+	// a method that will set value for policy holder and return the get value of policyHolder 
+	public PolicyHolder fillInData(CustomerAccount tempCustomerAccount) {
+		
+		PolicyHolder tempPolicyHolder = new PolicyHolder();
+		
+		String birthdate ,licenseNumber ,licenseNumberIssued;
+		
+		LocalDate tempDate;
+		
+		do {
+			
+			birthdate = returnDateFormat("Enter Birthday ", "Incorrect date format");
+			
+			tempDate = LocalDate.parse(birthdate);	// add 6 month to the effective date
+
+			
+			if(LocalDate.now().minusYears(100).isAfter(tempDate)) {
+				
+				System.out.println("DATE OUT OF RANGE");
+			}
+			
+			if(tempDate.isAfter(LocalDate.now().minusYears(18))) {
+				
+				System.out.println("TOO YOUNG TO HAVE A VEHICLE INSURANCE MUST BE 18+ BASE ON TODAY DATE");
+			}
+			
+		}while(LocalDate.now().minusYears(100).isAfter(tempDate)||tempDate.isAfter(LocalDate.now().minusYears(18)));
+		
+		do {
+			licenseNumber = returnString("Enter License number: ", "Incorrect input");
+
+			if(tempPolicyHolder.licenseNumber(licenseNumber) == true) {
+				
+				System.out.println("LICENSE NUMBER ALREADY EXIST");
+			}
+			
+		} while (tempPolicyHolder.licenseNumber(licenseNumber) == true);
+		
+		do {
+			
+			licenseNumberIssued = returnDateFormat("Enter License issued date ", "Incorrect date format");
+
+			tempDate = LocalDate.parse(licenseNumberIssued);	// add 6 month to the effective date
+
+			if(LocalDate.now().minusYears(100).isAfter(tempDate)) {
+				
+				System.out.println("DATE OUT OF RANGE");
+			}
+			
+			if(tempDate.isBefore(LocalDate.parse(birthdate).plusYears(18))) {
+				
+				System.out.println("TOO YOUNG TO HAVE A DRIVERS LICENSE MUST BE 18+ BASE ON TODAY DATE");
+			}
+			if(tempDate.isAfter(LocalDate.now())) {
+				System.out.println("ISSUED DATE SHOULD NOT BE GREATER THAN TODAY DATE");
+				
+			}
+			
+		}while(LocalDate.now().minusYears(100).isAfter(tempDate) || tempDate.isBefore(LocalDate.parse(birthdate).plusYears(18))  || tempDate.isAfter(LocalDate.now()) );
+		
+		// a constructor that set new value for policy holder class
+		tempPolicyHolder = new PolicyHolder(tempCustomerAccount.getCustomerAccountID(),tempCustomerAccount.getAccountNumber(),tempCustomerAccount.getFirstName(),tempCustomerAccount.getLastName(),tempCustomerAccount.getAddress(), tempCustomerAccount.getCustomerAccountID(),0, "", "",tempCustomerAccount.getAddress(), birthdate, licenseNumber,licenseNumberIssued);
+	
+		return tempPolicyHolder;
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+}
